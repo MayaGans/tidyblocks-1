@@ -127,25 +127,50 @@ Blockly.JavaScript['plot_point'] = (block) => {
   const color = block.getFieldValue('COLOR')
   const curve = block.getFieldValue('CURVE')
 
-  const regression = ""
-  if (curve == "NONE") {
-    regression = ""
-  } else {
+  let regression = ""
+  if (curve === "EXPONENTIAL") {
+    `{
+      "mark": {"type": "line", "color": "firebrick"},
+      "transform": [
+        {
+          "regression": "${y_axis}",
+          "on": "${x_axis}",
+          "method": "exp"
+        }
+      ],
+      "encoding": {
+        "x": {"field": "${x_axis}", "type": "quantitative"},
+        "y": {"field": "${y_axis}", "type": "quantitative"}
+      }
+    }`
+  } else if (curve === "LINEAR") {
     regression = `,
       {
         "mark": {"type": "line", "color": "firebrick"},
-        "transform": [
-          {
-            "regression": "${y_axis}",
-            "on": "${x_axis}",
-            "method": "exp"
-          }
-        ],
+        "transform": [ { "regression": "${y_axis}", "on": "${x_axis}" } ],
         "encoding": {
           "x": {"field": "${x_axis}", "type": "quantitative"},
           "y": {"field": "${y_axis}", "type": "quantitative"}
         }
       }`
+  } else if (curve === "LOGARITHMIC") {
+    regression = `,
+    {
+      "mark": {"type": "line", "color": "firebrick"},
+      "transform": [
+        {
+          "regression": "${y_axis}",
+          "on": "${x_axis}"
+        }
+      ],
+      "encoding": {
+        "x": {"field": "${x_axis}", "type": "quantitative"},
+        "y": {"field": "${y_axis}", "type": "quantitative"},
+        "method": "log"
+      }
+    }`
+  } else {
+    regression = ""
   }
 
   const spec = `{
