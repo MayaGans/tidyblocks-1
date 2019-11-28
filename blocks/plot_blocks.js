@@ -111,22 +111,44 @@ Blockly.defineBlocksWithJsonArray([
 Blockly.defineBlocksWithJsonArray([
   {
     type: 'plot_point',
-    message0: 'Point %1 %2 %3',
-    args0: [
+    message0: 'Point %1 %2 %3 Curve %4',
+    "args0": [
       {
-        type: 'field_input',
-        name: 'X_AXIS',
-        text: 'X_axis'
+        "type": "field_input",
+        "name": "X_AXIS",
+        "text": "X_axis"
       },
       {
-        type: 'field_input',
-        name: 'Y_AXIS',
-        text: 'Y_axis'
+        "type": "field_input",
+        "name": "Y_AXIS",
+        "text": "Y_axis"
       },
       {
-        type: 'field_input',
-        name: 'COLOR',
-        text: 'color'
+        "type": "field_input",
+        "name": "COLOR",
+        "text": "color"
+      },
+      {
+        "type": "field_dropdown",
+        "name": "CURVE",
+        "options": [
+          [
+            "none",
+            "NONE"
+          ],
+          [
+            "linear",
+            "LINEAR"
+          ],
+          [
+            "logarathmic",
+            "LOGARITHMIC"
+          ],
+          [
+            "exponential",
+            "EXPONENTIAL"
+          ]
+        ]
       }
     ],
     inputsInline: true,

@@ -125,26 +125,45 @@ Blockly.JavaScript['plot_point'] = (block) => {
   const x_axis = block.getFieldValue('X_AXIS')
   const y_axis = block.getFieldValue('Y_AXIS')
   const color = block.getFieldValue('COLOR')
+  const curve = block.getFieldValue('CURVE')
+
+  const regression = ""
+  if (curve == "NONE") {
+    regression = ""
+  } else {
+    regression = `,
+      {
+        "mark": {"type": "line", "color": "firebrick"},
+        "transform": [
+          {
+            "regression": "${y_axis}",
+            "on": "${x_axis}",
+            "method": "exp"
+          }
+        ],
+        "encoding": {
+          "x": {"field": "${x_axis}", "type": "quantitative"},
+          "y": {"field": "${y_axis}", "type": "quantitative"}
+        }
+      }`
+  }
+
   const spec = `{
     "width": ${PLOT_WIDTH},
     "data": { "values": null }, // set to dataframe inside plotting function
-    "mark": "point",
-    "encoding": {
-      "x": {
-        "field": "${x_axis}",
-        "type": "quantitative"
-      },
-      "y": {
-        "field": "${y_axis}",
-        "type": "quantitative"
-      },
-      "color": {
-        "field": "${color}",
-        "type": "nominal"
+    "layer": [
+      {
+        "mark": {"type": "point", "filled": true},
+        "encoding": {
+          "x": {"field": "${x_axis}", "type": "quantitative"},
+          "y": {"field": "${y_axis}", "type": "quantitative"}
+        }
       }
-    }
+      ${regression}
+    ]
   }`
   const suffix = registerSuffix('')
+  console.log(spec)
   return `.plot(environment, ${spec}) ${suffix}`
 }
 
