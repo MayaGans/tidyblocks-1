@@ -13,15 +13,17 @@
   <body>
 
     <div class="topnav">
-
       <button>
         <a href="./guide/" >
-        <i class="fa fa-question-circle fa-lg"></i>
-      </a>
-    </button>
+          <i class="fa fa-question-circle fa-lg"></i>
+        </a>
+      </button>
 
       <input type="file" id="imgupload" style="display:none" onchange="loadCode(this.files)"/>
       <button id="OpenImgUpload"><i class="fa fa-upload fa-lg"></i></button>
+
+      <input type="file" id="dataupload" style="display:none" accept=".csv" onchange="loadData(this.files)"/>
+      <button id="OpenDataUpload"><i class="fa fa-database fa-lg"></i></button>
 
       <div class="dropdown">
         <button>
@@ -51,6 +53,8 @@
               <block type="data_mtcars"></block>
               <block type="data_toothGrowth"></block>
               <block type="data_urlCSV"></block>
+              <block type="data_local"></block>
+              <block type="data_sequence"></block>
             </category>
             <category name="transform" categorystyle="transform">
               <block type="transform_drop"></block>
@@ -74,7 +78,6 @@
               <block type="plot_hist"></block>
               <block type="plot_dot"></block>
               <block type="plot_point"></block>
-              <block type="plot_table"></block>
             </category>
             <category name="operation" categorystyle="operation">
               <block type="operation_arithmetic"></block>
@@ -93,11 +96,23 @@
               <block type="value_datetime"></block>
               <block type="value_number"></block>
               <block type="value_text"></block>
+              <block type="value_rownum"></block>
+              <block type="value_uniform"></block>
+              <block type="value_normal"></block>
+              <block type="value_exponential"></block>
             </category>
             <category name="combine" categorystyle="combine">
               <block type="combine_notify"></block>
               <block type="combine_join"></block>
-              <block type="combine_beside"></block>
+              <block type="combine_concatenate"></block>
+            </category>
+            <category name="statistics" categorystyle="statistics">
+              <block type="stats_z_test_one_sample"></block>
+              <block type="stats_kruskal_wallis"></block>
+              <block type="stats_kolmogorov_smirnov"></block>
+              <block type="stats_t_test_one_sample"></block>
+              <block type="stats_t_test_paired"></block>
+              <block type="stats_anova"></block>
             </category>
           </xml>
         </div>
@@ -107,8 +122,9 @@
         <ul class="nav nav-tabs">
           <li class="active"><a data-toggle="tab" href="#data">Data</a></li>
           <li><a data-toggle="tab" href="#plot">Plot</a></li>
-          <li><a data-toggle="tab" href="#debug">Debug</a></li>
-          <li><a data-toggle="tab" href="#text">Text</a></li>
+          <li><a data-toggle="tab" href="#stats">Stats</a></li>
+          <li><a data-toggle="tab" href="#error">Errors</a></li>
+          <li><a data-toggle="tab" href="#code">Code</a></li>
         </ul>
 
         <div class="tab-content">
@@ -118,21 +134,13 @@
           <div id="plot" class="tab-pane fade">
             <div id="plotOutput"></div>
           </div>
-          <div id="debug" class="tab-pane fade">
-            <div id="error"></div>
+          <div id="stats" class="tab-pane fade">
+            <div id="statsOutput"></div>
           </div>
-          <div id="text" class="tab-pane fade">
-
-            <div class="language">
-              <div class="select-style">
-                <select>
-                  <option value="javascript">JavaScript</option>
-                  <option value="python" disabled>Python</option>
-                  <option value="r" disabled>R</option>
-                </select>
-              </div>
-            </div>
-
+          <div id="error" class="tab-pane fade">
+            <div id="errorOutput"></div>
+          </div>
+          <div id="code" class="tab-pane fade">
             <div id="codeOutput"></div>
           </div>
         </div>
@@ -154,10 +162,7 @@
 
     <!-- stdlib (not available via CDN) -->
     <!-- Call with fully-qualified names, e.g. stdlib.math.base.special.gcd(18, 8) -->
-    <script src="external/stdlib-tree.min.js"></script>
-
-    <!-- TidyBlocks GUI (outside the #tidyblocks div so that tests won't try to load it) -->
-    <script src="tidyblocks/gui.js"></script>
+    <script src="static/stdlib-tree.min.js"></script>
 
     <!-- Put all blocks code in a div so it's easy to find and load for testing. -->
     <div id="tidyblocks">
@@ -166,27 +171,33 @@
       <script src="tidyblocks/themes.js"></script>
 
       <!-- TidyBlocks blocks -->
-      <script src="blocks/data_blocks.js"></script>
-      <script src="blocks/operation_blocks.js"></script>
-      <script src="blocks/plot_blocks.js"></script>
-      <script src="blocks/combine_blocks.js"></script>
-      <script src="blocks/transform_blocks.js"></script>
+      <script src="blocks/data.js"></script>
+      <script src="blocks/operation.js"></script>
+      <script src="blocks/plot.js"></script>
+      <script src="blocks/combine.js"></script>
+      <script src="blocks/stats.js"></script>
+      <script src="blocks/transform.js"></script>
       <script src="blocks/transform_summarize_item.js"></script>
-      <script src="blocks/value_blocks.js"></script>
+      <script src="blocks/value.js"></script>
 
       <!-- TidyBlocks code generators -->
-      <script src="generators/js/data_blocks.js"></script>
-      <script src="generators/js/operation_blocks.js"></script>
-      <script src="generators/js/plot_blocks.js"></script>
-      <script src="generators/js/combine_blocks.js"></script>
-      <script src="generators/js/transform_blocks.js"></script>
-      <script src="generators/js/transform_summarize_item.js"></script>
-      <script src="generators/js/value_blocks.js"></script>
+      <script src="generators/data.js"></script>
+      <script src="generators/operation.js"></script>
+      <script src="generators/plot.js"></script>
+      <script src="generators/combine.js"></script>
+      <script src="generators/stats.js"></script>
+      <script src="generators/transform.js"></script>
+      <script src="generators/transform_summarize_item.js"></script>
+      <script src="generators/value.js"></script>
     </div>
 
+    <!-- TidyBlocks GUI (outside the #tidyblocks div so that tests won't try to load it) -->
+    <script src="tidyblocks/gui.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {
         setUpBlockly()
+        TbManager.papa = Papa // make CSV parser available inside blocks
+        TbManager.stdlib = stdlib // make math libraries available inside blocks
       })
     </script>
   </body>

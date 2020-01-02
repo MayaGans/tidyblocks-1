@@ -45,9 +45,6 @@ Blockly.defineBlocksWithJsonArray([
 //
 // Visuals for datetime block.
 //
-//
-// Visuals for datetime block.
-//
 Blockly.defineBlocksWithJsonArray([ 
   {
     type: 'value_datetime',
@@ -63,7 +60,6 @@ Blockly.defineBlocksWithJsonArray([
     tooltip: 'constant date/time'
   }
 ])
-
 
 //
 // Visuals for number block.
@@ -102,5 +98,93 @@ Blockly.defineBlocksWithJsonArray([
     style: 'value_blocks',
     helpUrl: '',
     tooltip: 'constant text'
+  }
+])
+
+//
+// Visuals for row number field block.
+//
+Blockly.defineBlocksWithJsonArray([
+  {
+    type: 'value_rownum',
+    message0: 'Row number',
+    args0: [],
+    output: 'String',
+    style: 'value_blocks',
+    helpUrl: '',
+    tooltip: 'row number'
+  }
+])
+
+//
+// Visuals for uniform random value block.
+//
+Blockly.defineBlocksWithJsonArray([
+  {
+    type: 'value_uniform',
+    message0: 'Uniform low α %1 high β %2',
+    args0: [
+      {
+        type: 'field_input',
+        name: 'VALUE_1',
+        text: '0'
+      },
+      {
+        type: 'field_input',
+        name: 'VALUE_2',
+        text: '1'
+      }
+    ],
+    output: 'Number',
+    style: 'value_blocks',
+    helpUrl: '',
+    tooltip: 'uniform random value'
+  }
+])
+
+//
+// Visuals for normal random value block.
+//
+Blockly.defineBlocksWithJsonArray([
+  {
+    type: 'value_normal',
+    message0: 'Normal mean μ %1 std dev σ %2',
+    args0: [
+      {
+        type: 'field_input',
+        name: 'VALUE_1',
+        text: '0'
+      },
+      {
+        type: 'field_input',
+        name: 'VALUE_2',
+        text: '1'
+      }
+    ],
+    output: 'Number',
+    style: 'value_blocks',
+    helpUrl: '',
+    tooltip: 'normal random value'
+  }
+])
+
+//
+// Visuals for exponential random value block.
+//
+Blockly.defineBlocksWithJsonArray([
+  {
+    type: 'value_exponential',
+    message0: 'Exponential rate λ %1',
+    args0: [
+      {
+        type: 'field_input',
+        name: 'VALUE_1',
+        text: '0'
+      }
+    ],
+    output: 'Number',
+    style: 'value_blocks',
+    helpUrl: '',
+    tooltip: 'exponential random value'
   }
 ])

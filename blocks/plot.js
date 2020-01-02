@@ -159,6 +159,7 @@ Blockly.defineBlocksWithJsonArray([
     extensions: ['validate_X_AXIS', 'validate_Y_AXIS', 'validate_COLOR']
   }
 ])
+<<<<<<< HEAD:blocks/plot_blocks.js
 
 //
 // Visuals for "plotting" block that just shows the table.
@@ -173,3 +174,5 @@ Blockly.defineBlocksWithJsonArray([
     helpUrl: ''
   }
 ])
+=======
+>>>>>>> 25dccbb7a7b18110c3813b6e43a913ba3d64e6e3:blocks/plot.js

@@ -26,8 +26,10 @@ Blockly.defineBlocksWithJsonArray([
 Blockly.defineBlocksWithJsonArray([
   {
     type: 'combine_join',
-    message0: 'Join %1 %2 %3 %4',
-    args0: [
+    message0: 'Join',
+    args0: [],
+    message1: '%1 %2',
+    args1: [
       {
         type: 'field_input',
         name: 'LEFT_TABLE',
@@ -37,7 +39,10 @@ Blockly.defineBlocksWithJsonArray([
         type: 'field_input',
         name: 'LEFT_COLUMN',
         text: 'left_column'
-      },
+      }
+    ],
+    message2: '%1 %2',
+    args2: [
       {
         type: 'field_input',
         name: 'RIGHT_TABLE',
@@ -49,7 +54,7 @@ Blockly.defineBlocksWithJsonArray([
         text: 'right_column'
       }
     ],
-    inputsInline: true,
+    inputsInline: false,
     nextStatement: null,
     style: 'combine_blocks',
     hat: 'cap',
@@ -60,13 +65,15 @@ Blockly.defineBlocksWithJsonArray([
 ])
 
 //
-// Visuals for beside block.
+// Visuals for concatenate block.
 //
 Blockly.defineBlocksWithJsonArray([
   {
-    type: 'combine_beside',
-    message0: 'Beside %1 %2',
-    args0: [
+    type: 'combine_concatenate',
+    message0: 'Concatenate',
+    args0: [],
+    message1: '%1 %2',
+    args1: [
       {
         type: 'field_input',
         name: 'LEFT_TABLE',
@@ -74,16 +81,29 @@ Blockly.defineBlocksWithJsonArray([
       },
       {
         type: 'field_input',
-        name: 'RIGHT_TABLE',
-        text: 'right_table'
+        name: 'LEFT_COLUMN',
+        text: 'left_column'
       }
     ],
-    inputsInline: true,
+    message2: '%1 %2',
+    args2: [
+      {
+        type: 'field_input',
+        name: 'RIGHT_TABLE',
+        text: 'right_table'
+      },
+      {
+        type: 'field_input',
+        name: 'RIGHT_COLUMN',
+        text: 'right_column'
+      }
+    ],
+    inputsInline: false,
     nextStatement: null,
     style: 'combine_blocks',
     hat: 'cap',
-    tooltip: 'put two tables beside each other',
+    tooltip: 'concatenate columns from two tables',
     helpUrl: '',
-    extensions: ['validate_LEFT_TABLE', 'validate_RIGHT_TABLE']
+    extensions: ['validate_LEFT_TABLE', 'validate_LEFT_COLUMN', 'validate_RIGHT_TABLE', 'validate_RIGHT_COLUMN']
   }
 ])

@@ -10,14 +10,16 @@ const MULTIPLE_COLUMN_NAMES = /^ *([_A-Za-z][_A-Za-z0-9]*)( *, *[_A-Za-z][_A-Za-
 
 // Names of single-column fields in various blocks (for generating validators).
 const SINGLE_COLUMN_FIELDS = [
+  'COLOR',
   'COLUMN',
   'FORMAT',
-  'LEFT_TABLE',
+  'GROUPS',
   'LEFT_COLUMN',
-  'RIGHT_TABLE',
-  'RIGHT_COLUMN',
+  'LEFT_TABLE',
   'NAME',
-  'COLOR',
+  'RIGHT_COLUMN',
+  'RIGHT_TABLE',
+  'VALUES',
   'X_AXIS',
   'Y_AXIS'
 ]
@@ -26,6 +28,9 @@ const SINGLE_COLUMN_FIELDS = [
 const MULTIPLE_COLUMN_FIELDS = [
   'MULTIPLE_COLUMNS'
 ]
+
+// Location of standard datasets.
+STANDARD_DATASET_BASE_URL = 'https://raw.githubusercontent.com/tidyblocks/tidyblocks/master/data/'
 
 //--------------------------------------------------------------------------------
 
@@ -49,11 +54,17 @@ class GuiEnvironment {
   /**
    * Read CSV from a URL and parse to create TidyBlocks data frame.
    * @param {string} url URL to read from.
+   * @param {boolean} standard Add prefix for standard dataset location.
+   * @return dataframe containing that data.
    */
-  readCSV (url) {
+  readCSV (url, standard=false) {
+    if ((url === "url") || (url.length === 0)) {
+      throw new Error('Cannot fetch empty URL')
+    }
 
-    tbAssert((url !== "url") && (url.length > 0),
-             `Cannot fetch empty URL`)
+    if (standard) {
+      url = `${STANDARD_DATASET_BASE_URL}/${url}`
+    }
 
     const request = new XMLHttpRequest()
     request.open('GET', url, false)
@@ -64,8 +75,17 @@ class GuiEnvironment {
       return null
     }
     else {
-      return csv2TidyBlocksDataFrame(request.responseText, Papa.parse)
+      return TbManager.csv2tbDataFrame(request.responseText)
     }
+  }
+
+  /**
+   * Use a previously-loaded local CSV file.
+   * @param {string} name Name of file to use.
+   * @return dataframe containing that data.
+   */
+  useLocal (name) {
+    return TbManager.files.get(name)
   }
 
   /**
@@ -74,6 +94,15 @@ class GuiEnvironment {
    */
   displayPlot (spec) {
     vegaEmbed('#plotOutput', spec, {})
+  }
+
+  /**
+   * Display statistical test results.
+   * @param {Object} values stdlib results for statistical test.
+   * @param {Object} legend Text values describing results.
+   */
+  displayStats (values, legend) {
+    document.getElementById('statsOutput').innerHTML = stats2table(values, legend)
   }
 
   /**
@@ -89,7 +118,7 @@ class GuiEnvironment {
    * @param {string} error The message to display.
    */
   displayError (error) {
-    document.getElementById('error').innerHTML = error
+    document.getElementById('errorOutput').innerHTML = error
   }
 }
 
@@ -124,11 +153,12 @@ const generateCodePane = () => {
 }
 
 /**
- * Show the text based code corresponding to selected blocks.
+ * Show the code corresponding to current blocks.
  */
 const showCode = () => {
-  const code = Blockly.JavaScript.workspaceToCode(TidyBlocksWorkspace)
-  document.getElementById('codeOutput').innerHTML = code
+  const rawCode = Blockly.JavaScript.workspaceToCode(TidyBlocksWorkspace)
+  const fixedCode = TbManager.fixCode(rawCode)
+  document.getElementById('codeOutput').innerHTML = fixedCode
 }
 
 /**
@@ -159,7 +189,7 @@ const setUpBlockly = () => {
   TidyBlocksWorkspace.addChangeListener((event) => {
     if (event.type === Blockly.Events.CREATE) {
       const block = TidyBlocksWorkspace.getBlockById(event.blockId)
-      TidyBlocksManager.addNewBlock(block)
+      TbManager.addNewBlock(block)
     }
     else if (event.type === Blockly.Events.DELETE) {
       // FIXME: handle deletion
@@ -173,6 +203,16 @@ const setUpBlockly = () => {
   MULTIPLE_COLUMN_FIELDS.forEach(col => {
     Blockly.Extensions.register(`validate_${col}`, createValidator(col, MULTIPLE_COLUMN_NAMES))
   })
+
+  Blockly.Extensions.register('local_file_extension',
+  function() {
+    this.getInput('INPUT')
+      .appendField(new Blockly.FieldDropdown(
+        function() {
+          const options = Array.from(TbManager.files.keys()).map(name => [name, name])
+          return options;
+        }), 'FILENAME');
+  });
 }
 
 /**
@@ -201,7 +241,7 @@ const createValidator = (columnName, pattern) => {
  */
 const runCode = () => {
   Blockly.JavaScript.INFINITE_LOOP_TRAP = null
-  TidyBlocksManager.run(new GuiEnvironment())
+  TbManager.run(new GuiEnvironment())
 }
 
 /**
@@ -209,12 +249,12 @@ const runCode = () => {
  * Depends on the global TidyBlocksWorkspace variable.
  */
 const saveCode = () => {
-  var filename = 'Workspace_' + new Date().toLocaleDateString() + '.txt';
-    const xml = Blockly.Xml.workspaceToDom(TidyBlocksWorkspace)
-    const text = Blockly.Xml.domToText(xml)
-    const link = document.getElementById('download')
-    link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
-    link.setAttribute('download', filename)
+  const filename = 'Workspace_' + new Date().toLocaleDateString() + '.txt'
+  const xml = Blockly.Xml.workspaceToDom(TidyBlocksWorkspace)
+  const text = Blockly.Xml.domToText(xml)
+  const link = document.getElementById('download')
+  link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+  link.setAttribute('download', filename)
 }
 
 /**
@@ -229,20 +269,21 @@ function saveTable(table_id) {
   // Construct csv
   var csv = [];
   for (var i = 0; i < rows.length; i++) {
-      var row = [], cols = rows[i].querySelectorAll('td, th');
-      for (var j = 0; j < cols.length; j++) {
-          // Clean innertext to remove multiple spaces and jumpline (break csv)
-          var data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ')
-          // Escape double-quote with double-double-quote (see https://stackoverflow.com/questions/17808511/properly-escape-a-double-quote-in-csv)
-          data = data.replace(/"/g, '""');
-          // Push escaped string
-          row.push('"' + data + '"');
-      }
-      csv.push(row.join(','));
+    var row = [], cols = rows[i].querySelectorAll('td, th');
+    for (var j = 0; j < cols.length; j++) {
+      // Clean innertext to remove multiple spaces and jumpline (break csv)
+      var data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ')
+      // Escape double-quote with double-double-quote.
+      // see https://stackoverflow.com/questions/17808511/properly-escape-a-double-quote-in-csv)
+      data = data.replace(/"/g, '""');
+      // Push escaped string
+      row.push('"' + data + '"');
+    }
+    csv.push(row.join(','));
   }
   var csv_string = csv.join('\n');
   // Download it
-  var filename = 'TidyBlocksDataFrame_' + new Date().toLocaleDateString() + '.csv';
+  var filename = 'TbDataFrame_' + new Date().toLocaleDateString() + '.csv';
   var link = document.createElement('a');
   link.style.display = 'none';
   link.setAttribute('target', '_blank');
@@ -283,18 +324,13 @@ $(function() {
       window.open(uri);
     }
   }
-});
+})
 
 /**
  * Load saved code.
  * Depends on the global TidyBlocksWorkspace variable.
  * @param {string[]} fileList List of files (only first element is valid).
  */
-
-
-// Upload workspace
-$('#OpenImgUpload').click(function(){ $('#imgupload').trigger('click'); });
-
 const loadCode = (fileList) => {
   const file = fileList[0]
   const text = file.text().then((text) => {
@@ -302,6 +338,34 @@ const loadCode = (fileList) => {
     Blockly.Xml.clearWorkspaceAndLoadFromXml(xml, TidyBlocksWorkspace)
   })
 }
+
+/*
+ * Upload workspace when button clicked.
+ */
+$('#OpenImgUpload').click(function() {
+  $('#imgupload').trigger('click')
+})
+
+/**
+ * Load local data file for later use.
+ * Depends on the global TidyBlocksWorkspace variable.
+ * @param {string[]} fileList List of files (only first element is valid).
+ */
+const loadData = (fileList) => {
+  const file = fileList[0]
+  const name = file.name
+  const text = file.text().then(text => {
+    const df = TbManager.csv2tbDataFrame(text)
+    TbManager.files.set(name, df)
+  })
+}
+
+/*
+ * Upload data file when button clicked.
+ */
+$('#OpenDataUpload').click(function() {
+  $('#dataupload').trigger('click')
+})
 
 /**
  * Produce a human-friendly name for the type of a column.
@@ -331,6 +395,31 @@ const json2table = (json) => {
     return '<tr>' + cols.map(c => value2html(row[c])).join('') + '</tr>'
   }).join('')
   return `<table id="dataFrame"><thead>${headerRow}</thead><tbody>${typeRow}${bodyRows}</tbody></table>`
+}
+
+/**
+ * Create a tabular display of statistical results.
+ * @param {Object} values stdlib results for statistical test.
+ * @param {Object} legend Text values describing results.
+ */
+const stats2table = (values, legend) => {
+  const title = legend._title
+  delete legend._title
+  const headerRow = '<tr><th>Result</th><th>Value</th><th>Explanation</th></tr>'
+  const bodyRows = Object.keys(legend).map(key => {
+    let value = values[key]
+    if (value === undefined) {
+      value = ''
+    }
+    else if (Array.isArray(value)) {
+      value = value.map(x => x.toPrecision(PRECISION)).join(',<br/>')
+    }
+    else if (typeof value === 'number') {
+      value = value.toPrecision(PRECISION)
+    }
+    return `<tr><td>${key}</td><td>${value}</td><td>${legend[key]}</td></tr>`
+  }).join('')
+  return `<p>${title}</p><table id="statsResult"><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table>`
 }
 
 /**
