@@ -57,7 +57,7 @@ Blockly.JavaScript['stats_t_test_paired'] = (block) => {
   const right = block.getFieldValue('RIGHT_COLUMN')
   const significance = block.getFieldValue('SIGNIFICANCE')
   const params = `{alpha: ${significance}}`
-  return `.test(${block.tbId}, environment, tbTTestPaired, ${params}, "${left}", "${right}")`
+  return `.test(environment, ${block.tbId}, tbTTestPaired, ${params}, "${left}", "${right}")`
 }
 
 //

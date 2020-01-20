@@ -102,7 +102,31 @@ class GuiEnvironment {
    * @param {Object} legend Text values describing results.
    */
   displayStats (values, legend) {
-    document.getElementById('statsOutput').innerHTML = stats2table(values, legend)
+    document.getElementById('statsOutput').innerHTML = 
+    stats2table(values, legend)
+  }
+
+  /**
+   * Display statistical test as distribution.
+   * @param {Object} significance stdlib results for statistical test to plot tails
+   */
+  displayStatsPlot () {
+    let statplot = {
+      "data": {"sequence": {"start": -5, "stop": 5, "step": 0.1, "as": "x"}},
+      "transform": [{"calculate": "densityNormal(datum.x, 0, 1)", "as": "y"}],
+      "encoding": {
+        "x": {"field": "x", "type": "quantitative"},
+        "y": {"field": "y", "type": "quantitative"}
+      },
+      "layer": [
+        {"mark": "line"},
+        {"transform": [{"filter": `datum.x <= 0.5 `}],"mark": "area"},
+        {"transform": [{"filter": `datum.x >= 0.5 `}], "mark": "area"}
+      ],
+      "width": 300,
+      "height": 150
+    }
+    vegaEmbed("#statsPlot", statplot, {})
   }
 
   /**
